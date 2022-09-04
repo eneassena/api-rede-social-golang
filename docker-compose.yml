@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  mariadb:
+    image: mariadb:10.8.3
+    container_name: devbook-web-api
+    hostname: devbook-web-api
+    volumes:
+      - ./db/:/docker-entrypoint-initdb.d
+      - ./db/.data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_PASS}
