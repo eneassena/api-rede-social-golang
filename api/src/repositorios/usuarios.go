@@ -2,6 +2,7 @@ package repositorios
 
 import (
 	"database/sql"
+	"fmt"
 
 	"api/src/modelos"
 )
@@ -37,4 +38,96 @@ func (repositorio usuarios) Criar(usuarioInstance modelos.Usuario) (uint64, erro
 		return 0, erro
 	}
 	return uint64(lastId), nil
+}
+
+func (repositorio *usuarios) Buscar(nomeOuNick string) ([]modelos.Usuario, error) {
+	nomeOuNick = fmt.Sprintf("%%%s%%", nomeOuNick) // %nomeOuNick%
+
+	query := "SELECT id,nome,nick,email,criadoEm FROM usuarios WHERE nome LIKE ? or nick LIKE ?;"
+
+	linhas, erro := repositorio.db.Query(query, nomeOuNick, nomeOuNick)
+	if erro != nil {
+		return []modelos.Usuario{}, erro
+	}
+
+	var usuarios []modelos.Usuario
+
+	for linhas.Next() {
+		var usuario modelos.Usuario
+
+		if erro = linhas.Scan(
+			&usuario.ID,
+			&usuario.Nome,
+			&usuario.Nick,
+			&usuario.Email,
+			&usuario.CriadoEm,
+		); erro != nil {
+			return []modelos.Usuario{}, erro
+		}
+
+		usuarios = append(usuarios, usuario)
+	}
+
+	return usuarios, nil
+}
+
+func (repositorio *usuarios) BuscarPorId(usuarioId uint64) (modelos.Usuario, error) {
+	query := "select id,nome,nick,email,criadoEm from usuarios where id=?"
+
+	linhas, erro := repositorio.db.Query(query, usuarioId)
+	if erro != nil {
+		return modelos.Usuario{}, nil
+	}
+
+	if linhas.Next() {
+		var usuario modelos.Usuario
+
+		erro := linhas.Scan(
+			&usuario.ID,
+			&usuario.Nome,
+			&usuario.Nick,
+			&usuario.Email,
+			&usuario.CriadoEm,
+		)
+		if erro != nil {
+			return modelos.Usuario{}, nil
+		}
+		return usuario, nil
+	}
+	return modelos.Usuario{}, nil
+}
+
+func (repositorio *usuarios) Atualizer(usuarioId uint64, usuario modelos.Usuario) error {
+	query := "update usuarios set nome=?,nick=?,email=? where id=?"
+	var statement *sql.Stmt
+	var erro error
+	statement, erro = repositorio.db.Prepare(query)
+	if erro != nil {
+		return erro
+	}
+	defer statement.Close()
+
+	linhas, erro := statement.Exec(
+		usuario.Nome,
+		usuario.Nick,
+		usuario.Email,
+		usuarioId,
+	)
+	if erro != nil {
+		return erro
+	}
+	linhasAfetadas, erro := linhas.RowsAffected()
+	if linhasAfetadas != 0 {
+		return erro
+	}
+	return nil
+}
+
+func (repositorio *usuarios) Remover(usuarioId uint64) error {
+	query := "delete from usuarios where id=?"
+	_, erro := repositorio.db.Query(query, usuarioId)
+	if erro != nil {
+		return erro
+	}
+	return nil
 }
