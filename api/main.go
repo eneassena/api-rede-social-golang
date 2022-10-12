@@ -14,6 +14,10 @@ func main() {
 
 	r := router.Gerar()
 
-	fmt.Printf("escutando na port: %v", config.Porta)
+	message := fmt.Sprintf("App Rede Social\nURI: http://127.0.0.1:%v", config.Porta)
+
+	log.Println(message)
+
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Porta), r))
 }
+ 

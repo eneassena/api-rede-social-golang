@@ -97,9 +97,11 @@ func (repositorio *usuarios) BuscarPorId(usuarioId uint64) (modelos.Usuario, err
 	return modelos.Usuario{}, nil
 }
 
+/*
+ * BuscarPorEmail busca um usuario pelo email e retorna o id e senha
+ */
 func (repositorio *usuarios) BuscarPorEmail(email string) (modelos.Usuario, error) {
-	query := "select * from usuarios where email =?"
-
+	query := "select id,senha from devbook.usuarios where email=?"
 	linhas, erro := repositorio.db.Query(query, email)
 	if erro != nil {
 		return modelos.Usuario{}, nil
@@ -107,7 +109,7 @@ func (repositorio *usuarios) BuscarPorEmail(email string) (modelos.Usuario, erro
 
 	var usuario modelos.Usuario
 	if linhas.Next() {
-		if erro := linhas.Scan(&usuario.ID, &usuario.Email); erro != nil {
+		if erro := linhas.Scan(&usuario.ID, &usuario.Senha); erro != nil {
 			return modelos.Usuario{}, nil
 		}
 	}

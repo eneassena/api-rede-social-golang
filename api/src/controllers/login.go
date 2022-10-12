@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+
+	// "log"
 	"net/http"
 )
 
@@ -21,12 +23,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var usuario modelos.Usuario
-
 	if erro := json.Unmarshal(corpoDaRequisicao, &usuario); erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-
 	db, erro := banco.Conectar()
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
@@ -36,15 +36,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	repositorio := repositorios.NovoRepositorioDeUsuario(db)
 	usuarioSalvoNoBanco, erro := repositorio.BuscarPorEmail(usuario.Email)
+
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
 		return
 	}
-
 	if erro = seguranca.VerificarSenha(usuarioSalvoNoBanco.Senha, usuario.Senha); erro != nil {
 		respostas.Erro(w, http.StatusUnauthorized, erro)
 		return
 	}
+
 	token, erro := autenticacao.CriarToken(usuarioSalvoNoBanco.ID)
 	if erro != nil {
 		respostas.Erro(w, http.StatusInternalServerError, erro)
